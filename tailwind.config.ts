@@ -52,16 +52,27 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
-				}
+				honey: {
+					DEFAULT: 'hsl(var(--honey))',
+					light: 'hsl(var(--honey-light))',
+					dark: 'hsl(var(--honey-dark))'
+				},
+				success: 'hsl(var(--success))',
+				warning: 'hsl(var(--warning))',
+				danger: 'hsl(var(--danger))',
+				temp: 'hsl(var(--temp-color))',
+				humidity: 'hsl(var(--humidity-color))',
+				air: 'hsl(var(--air-color))'
+			},
+			backgroundImage: {
+				'gradient-honey': 'var(--gradient-honey)',
+				'gradient-danger': 'var(--gradient-danger)',
+				'gradient-success': 'var(--gradient-success)'
+			},
+			boxShadow: {
+				'neumorphic': 'var(--shadow-neumorphic)',
+				'neumorphic-inset': 'var(--shadow-neumorphic-inset)',
+				'glow': 'var(--shadow-glow)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +95,33 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-danger': {
+					'0%, 100%': {
+						borderColor: 'hsl(var(--danger))',
+						boxShadow: '0 0 0 0 hsl(var(--danger) / 0.5)'
+					},
+					'50%': {
+						borderColor: 'hsl(var(--danger))',
+						boxShadow: '0 0 20px 10px hsl(var(--danger) / 0.3)'
+					}
+				},
+				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-danger': 'pulse-danger 2s ease-in-out infinite',
+				'fade-in': 'fade-in 0.3s ease-out'
 			}
 		}
 	},
