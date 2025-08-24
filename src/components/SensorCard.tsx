@@ -48,11 +48,11 @@ export function SensorCard({ type, value, unit, historicalData }: SensorCardProp
   const config = sensorConfig[type];
   const Icon = config.icon;
   
-  const isAbnormal = value < config.normalRange.min || 
-    (config.normalRange.max < 100 && value > config.normalRange.max);
+  const isAbnormal = value != null && (value < config.normalRange.min || 
+    (config.normalRange.max < 100 && value > config.normalRange.max));
   
-  const trend = historicalData.length > 1 
-    ? value - historicalData[historicalData.length - 2]?.value 
+  const trend = historicalData.length > 1 && historicalData[historicalData.length - 2]?.value != null
+    ? value - historicalData[historicalData.length - 2].value 
     : 0;
 
   const filterDataByRange = () => {
@@ -136,7 +136,7 @@ export function SensorCard({ type, value, unit, historicalData }: SensorCardProp
             ) : (
               <Minus className="w-4 h-4" />
             )}
-            <span>{Math.abs(trend).toFixed(1)}</span>
+            <span>{Math.abs(trend || 0).toFixed(1)}</span>
           </div>
         </div>
         
@@ -144,7 +144,7 @@ export function SensorCard({ type, value, unit, historicalData }: SensorCardProp
           <p className="text-sm font-medium text-muted-foreground">{config.label}</p>
           <div className="flex items-baseline gap-1">
             <span className="text-3xl font-bold text-foreground">
-              {value.toFixed(1)}
+              {value != null ? value.toFixed(1) : '---'}
             </span>
             <span className="text-lg text-muted-foreground">{unit}</span>
           </div>
@@ -155,7 +155,7 @@ export function SensorCard({ type, value, unit, historicalData }: SensorCardProp
                 "h-full transition-all duration-500",
                 isAbnormal ? "bg-gradient-danger" : `bg-${config.color}`
               )}
-              style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+              style={{ width: `${Math.min(100, Math.max(0, value || 0))}%` }}
             />
           </div>
         </div>
