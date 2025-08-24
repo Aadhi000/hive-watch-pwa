@@ -100,7 +100,74 @@ export function SensorCard({ type, value, unit, historicalData }: SensorCardProp
   };
 
   const chartData = filterDataByRange();
-  const labels = chartData.map(d => d.timestamp);
+  
+  // Format timestamps based on time range
+  const formatTimestamp = (timestamp: string, range: TimeRange, index: number, totalLength: number) => {
+    const date = new Date(timestamp);
+    
+    switch (range) {
+      case 'live':
+        return date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+      case '1h':
+        // Show every 10 minutes or every few data points
+        if (index % Math.max(1, Math.floor(totalLength / 6)) === 0) {
+          return date.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          });
+        }
+        return '';
+      case '24h':
+        // Show every few hours
+        if (index % Math.max(1, Math.floor(totalLength / 8)) === 0) {
+          return date.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          });
+        }
+        return '';
+      case '7d':
+        // Show every day
+        if (index % Math.max(1, Math.floor(totalLength / 7)) === 0) {
+          return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric'
+          });
+        }
+        return '';
+      case '15d':
+        // Show every 2-3 days
+        if (index % Math.max(1, Math.floor(totalLength / 5)) === 0) {
+          return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+          });
+        }
+        return '';
+      case '30d':
+        // Show weekly
+        if (index % Math.max(1, Math.floor(totalLength / 4)) === 0) {
+          return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+          });
+        }
+        return '';
+      default:
+        return date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+    }
+  };
+  
+  const labels = chartData.map((d, index) => formatTimestamp(d.timestamp, timeRange, index, chartData.length));
   const values = chartData.map(d => d.value);
 
   return (
