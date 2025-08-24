@@ -5,8 +5,8 @@ import { toast } from 'sonner';
 export interface SensorData {
   temperature: number;
   humidity: number;
-  airpurity: number;
-  timestamp: string;
+  air_quality: number;  // Changed from airpurity to air_quality
+  last_time: string;    // Changed from timestamp to last_time
 }
 
 export interface HistoricalData {
@@ -34,7 +34,7 @@ export function useFirebaseData() {
         const isAbnormal = 
           data.temperature < 18 || data.temperature > 30 ||
           data.humidity < 60 ||
-          data.airpurity < 60;
+          data.air_quality < 60;  // Changed from airpurity to air_quality
           
         if (isAbnormal) {
           // Play alert sound
@@ -52,8 +52,8 @@ export function useFirebaseData() {
               description: 'Humidity is below safe threshold (60%)'
             });
           }
-          if (data.airpurity < 60) {
-            toast.error(`Air Quality Alert: ${data.airpurity}%`, {
+          if (data.air_quality < 60) {
+            toast.error(`Air Quality Alert: ${data.air_quality}%`, {
               description: 'Air quality is below safe threshold (60%)'
             });
           }

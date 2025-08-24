@@ -26,7 +26,7 @@ export function Dashboard() {
   }
 
   // Transform historical data for charts
-  const getHistoricalArray = (key: 'temperature' | 'humidity' | 'airpurity') => {
+  const getHistoricalArray = (key: 'temperature' | 'humidity' | 'air_quality') => {
     return Object.entries(historicalData)
       .filter(([_, data]) => data && data[key] != null)
       .map(([timestamp, data]) => ({
@@ -61,15 +61,15 @@ export function Dashboard() {
         
         <SensorCard
           type="airpurity"
-          value={currentData.airpurity ?? 0}
+          value={currentData.air_quality ?? 0}
           unit="%"
-          historicalData={getHistoricalArray('airpurity')}
+          historicalData={getHistoricalArray('air_quality')}
         />
       </div>
 
       {/* Last Update */}
       <div className="text-center text-sm text-muted-foreground">
-        Last updated: {new Date(currentData.timestamp).toLocaleString()}
+        Last updated: {currentData.last_time ? new Date(currentData.last_time).toLocaleString() : 'N/A'}
       </div>
     </div>
   );
