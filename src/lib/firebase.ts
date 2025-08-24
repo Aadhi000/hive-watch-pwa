@@ -14,9 +14,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
-
 export const database = getDatabase(app);
-//export const messaging = typeof window !== 'undefined' && 'Notification' in window ? getMessaging(app) : null;
+export const messaging = typeof window !== 'undefined' && 'Notification' in window ? getMessaging(app) : null;
 
 export { ref, onValue, set, get, child, getToken, onMessage };

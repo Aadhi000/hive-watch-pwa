@@ -1,177 +1,111 @@
 import { useEffect, useState } from 'react';
-import { database, ref, onValue, get, child } from '@/lib/firebase';
+import { messaging, getToken, onMessage } from '@/lib/firebase';
 import { toast } from 'sonner';
 
-export interface SensorData {
-  temperature: number;
-  humidity: number;
-  air_quality: number;  // Changed from airpurity to air_quality
-  last_time: string;    // Changed from timestamp to last_time
-}
-
-export interface HistoricalData {
-  [key: string]: SensorData;
-}
-
-export function useFirebaseData() {
-  const [currentData, setCurrentData] = useState<SensorData | null>(null);
-  const [historicalData, setHistoricalData] = useState<HistoricalData>({});
-  const [isOnline, setIsOnline] = useState(true);
-  const [lastSeen, setLastSeen] = useState<Date | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Listen to current data
-    const currentRef = ref(database, 'beehive');
-    let lastHistoricalUpdate = Date.now();
-    
-    const unsubscribeCurrent = onValue(currentRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        setCurrentData(data);
-        setIsOnline(true);
-        setLastSeen(new Date());
-        
-        // Update historical data only every minute
-        const now = Date.now();
-        if (now - lastHistoricalUpdate >= 60000) { // 1 minute = 60000ms
-          const timestamp = data.last_time || new Date().toISOString();
-          setHistoricalData(prev => ({
-            ...prev,
-            [timestamp]: data
-          }));
-          lastHistoricalUpdate = now;
-        }
-        
-        // Check for abnormal values
-        const isAbnormal = 
-          data.temperature < 18 || data.temperature > 30 ||
-          data.humidity < 60 ||
-          data.air_quality < 60;  // Changed from airpurity to air_quality
-          
-        if (isAbnormal) {
-          // Play alert sound
-          const playAlert = async () => {
-            try {
-              const audio = new Audio('/alert.mp3');
-              audio.volume = 0.5;
-              await audio.play();
-            } catch (error) {
-              console.warn('Could not play alert sound:', error);
-            }
-          };
-          
-          playAlert();
-          
-          // Send actual browser notifications
-          if (Notification.permission === 'granted') {
-            let title = 'Beehive Alert 🚨';
-            let body = '';
-            
-            if (data.temperature < 18 || data.temperature > 30) {
-              title = `Temperature Alert: ${data.temperature}°C`;
-              body = 'Temperature is outside safe range (18-30°C)';
-            } else if (data.humidity < 60) {
-              title = `Humidity Alert: ${data.humidity}%`;
-              body = 'Humidity is below safe threshold (60%)';
-            } else if (data.air_quality < 60) {
-              title = `Air Quality Alert: ${data.air_quality}%`;
-              body = 'Air quality is below safe threshold (60%)';
-            }
-            
-            new Notification(title, {
-              body,
-              icon: '/icon-192.png',
-              badge: '/icon-192.png',
-              tag: 'beehive-alert',
-              requireInteraction: true,
-              silent: false
-            });
-          } else {
-            // Fallback to toast if notifications not granted
-            if (data.temperature < 18 || data.temperature > 30) {
-              toast.error(`Temperature Alert: ${data.temperature}°C`, {
-                description: 'Temperature is outside safe range (18-30°C)'
-              });
-            }
-            if (data.humidity < 60) {
-              toast.error(`Humidity Alert: ${data.humidity}%`, {
-                description: 'Humidity is below safe threshold (60%)'
-              });
-            }
-            if (data.air_quality < 60) {
-              toast.error(`Air Quality Alert: ${data.air_quality}%`, {
-                description: 'Air quality is below safe threshold (60%)'
-              });
-            }
-          }
-        }
-      }
-      setLoading(false);
-    }, (error) => {
-      console.error('Firebase connection error:', error);
-      setIsOnline(false);
-      setLoading(false);
-      toast.error('Connection Error', {
-        description: 'Unable to connect to Firebase'
-      });
-    });
-
-    // Fetch historical data
-    const fetchHistoricalData = async () => {
-      try {
-        const dbRef = ref(database);
-        const snapshot = await get(child(dbRef, 'history'));
-        if (snapshot.exists()) {
-          setHistoricalData(snapshot.val());
-        }
-      } catch (error) {
-        console.error('Error fetching historical data:', error);
-      }
-    };
-
-    fetchHistoricalData();
-
-    // Check online status periodically
-    const statusInterval = setInterval(() => {
-      if (lastSeen && new Date().getTime() - lastSeen.getTime() > 60000) {
-        setIsOnline(false);
-      }
-    }, 10000);
-
-    return () => {
-      unsubscribeCurrent();
-      clearInterval(statusInterval);
-    };
-  }, [lastSeen]);
-
-  return {
-    currentData,
-    historicalData,
-    isOnline,
-    lastSeen,
-    loading
-  };
-}
-
+const VAPID_KEY = 'BKagOny0KF_2pCJQ3m_RFmHkPBgcKmYNOWUaR5euV8HcBU1AdRSSfKRhbPEg4pcPM5wGUROZa4FX9V0tkcAXfJQ';
 
 export function useNotifications() {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    return localStorage.getItem('notificationsEnabled') === 'true';
+  });
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // Ask permission when enabling
-    if (notificationsEnabled && Notification.permission !== "granted") {
-      Notification.requestPermission().then((permission) => {
-        if (permission !== "granted") {
-          setNotificationsEnabled(false);
+    if (!messaging) return;
+
+    const setupNotifications = async () => {
+      try {
+        // Request permission
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted' && notificationsEnabled) {
+          // Get FCM token
+          const token = await getToken(messaging, {
+            vapidKey: VAPID_KEY
+          });
+          
+          if (token) {
+            setFcmToken(token);
+            console.log('FCM Token:', token);
+            
+            // Save token to Firebase or your backend
+            // This token should be sent to your server to send notifications
+          }
+        } else if (permission === 'denied') {
+          toast.error('Notifications blocked', {
+            description: 'Please enable notifications in your browser settings'
+          });
         }
-      });
+      } catch (error) {
+        console.error('Error setting up notifications:', error);
+      }
+    };
+
+    if (notificationsEnabled) {
+      setupNotifications();
     }
+
+    // Listen for foreground messages
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log('Foreground message received:', payload);
+      
+      // Show notification even when app is in foreground
+      if (payload.notification) {
+        const { title, body, icon } = payload.notification;
+        
+        // Show actual browser notification (priority)
+        if (Notification.permission === 'granted') {
+          new Notification(title || 'Beehive Alert', {
+            body: body || 'Check your beehive monitor',
+            icon: icon || '/icon-192.png',
+            badge: '/icon-192.png',
+            tag: 'beehive-alert',
+            requireInteraction: true,
+            silent: false
+          });
+        } else {
+          // Only show toast as fallback if notifications not granted
+          toast.error(title || 'Beehive Alert', {
+            description: body || 'Check your beehive monitor'
+          });
+        }
+        
+        // Play alert sound
+        const audio = new Audio('/alert.mp3');
+        audio.play().catch(console.error);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, [notificationsEnabled]);
 
-  const toggleNotifications = () => {
-    setNotificationsEnabled((prev) => !prev);
+  const toggleNotifications = async () => {
+    const newState = !notificationsEnabled;
+    setNotificationsEnabled(newState);
+    localStorage.setItem('notificationsEnabled', String(newState));
+    
+    if (newState) {
+      // Request permission when enabling
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        setNotificationsEnabled(false);
+        localStorage.setItem('notificationsEnabled', 'false');
+        toast.error('Permission denied', {
+          description: 'Please enable notifications in your browser settings'
+        });
+      } else {
+        toast.success('Notifications enabled');
+      }
+    } else {
+      toast.info('Notifications disabled');
+    }
   };
 
-  return { notificationsEnabled, toggleNotifications };
+  return {
+    notificationsEnabled,
+    toggleNotifications,
+    fcmToken
+  };
 }
