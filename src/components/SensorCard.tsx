@@ -42,6 +42,7 @@ type TimeRange = 'live' | '24h' | '7d' | '15d' | '30d';
 export function SensorCard({ type, value, unit, historicalData }: SensorCardProps) {
   const [showChart, setShowChart] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
+  const [isHovered, setIsHovered] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   
@@ -102,41 +103,52 @@ export function SensorCard({ type, value, unit, historicalData }: SensorCardProp
   const values = chartData.map(d => d.value);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div
         onClick={() => setShowChart(!showChart)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "relative p-6 rounded-2xl cursor-pointer transition-all duration-300",
-          "shadow-neumorphic hover:shadow-neumorphic-inset",
+          "relative p-6 rounded-2xl cursor-pointer",
+          "transform transition-all duration-500 ease-out",
+          "shadow-smooth hover:shadow-hover",
           "bg-card border-2",
-          isAbnormal ? "border-danger animate-pulse-danger" : "border-transparent",
-          "group"
+          isAbnormal ? "border-danger animate-pulse-danger" : "border-border/50 hover:border-primary/30",
+          "group",
+          isHovered && "scale-[1.02] -translate-y-1"
         )}
       >
         {isAbnormal && (
-          <div className="absolute -top-2 -right-2 bg-danger text-destructive-foreground px-2 py-1 rounded-full text-xs font-bold animate-bounce">
+          <div className="absolute -top-3 -right-3 bg-gradient-danger text-destructive-foreground px-3 py-1 rounded-full text-xs font-bold animate-bounce-slow shadow-glow">
             ALERT
           </div>
         )}
         
         <div className="flex items-start justify-between mb-4">
           <div className={cn(
-            "p-3 rounded-xl",
-            `bg-${config.color}/10`,
-            "group-hover:scale-110 transition-transform"
+            "p-3 rounded-xl transition-all duration-500",
+            type === 'temperature' && "bg-gradient-to-br from-orange-400/20 to-red-400/20",
+            type === 'humidity' && "bg-gradient-to-br from-blue-400/20 to-cyan-400/20",
+            type === 'airpurity' && "bg-gradient-to-br from-green-400/20 to-emerald-400/20",
+            "group-hover:scale-110 group-hover:rotate-3"
           )}>
-            <Icon className={cn("w-6 h-6", `text-${config.color}`)} />
+            <Icon className={cn(
+              "w-6 h-6 transition-colors duration-300",
+              type === 'temperature' && "text-temp",
+              type === 'humidity' && "text-humidity",
+              type === 'airpurity' && "text-air"
+            )} />
           </div>
           
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground transition-all duration-300 hover:scale-105">
             {trend > 0 ? (
-              <TrendingUp className="w-4 h-4 text-success" />
+              <TrendingUp className="w-4 h-4 text-success animate-fade-in" />
             ) : trend < 0 ? (
-              <TrendingDown className="w-4 h-4 text-danger" />
+              <TrendingDown className="w-4 h-4 text-danger animate-fade-in" />
             ) : (
-              <Minus className="w-4 h-4" />
+              <Minus className="w-4 h-4 animate-fade-in" />
             )}
-            <span>{Math.abs(trend || 0).toFixed(1)}</span>
+            <span className="font-medium">{Math.abs(trend || 0).toFixed(1)}</span>
           </div>
         </div>
         
