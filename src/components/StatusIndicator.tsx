@@ -1,4 +1,4 @@
-import { Circle } from 'lucide-react';
+import { Circle, Wifi } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StatusIndicatorProps {

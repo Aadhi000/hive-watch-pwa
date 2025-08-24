@@ -37,7 +37,7 @@ const sensorConfig = {
   }
 };
 
-type TimeRange = 'live' | '24h' | '7d' | '15d' | '30d';
+type TimeRange = 'live' | '1h' | '24h' | '7d' | '15d' | '30d';
 
 export function SensorCard({ type, value, unit, historicalData }: SensorCardProps) {
   const [showChart, setShowChart] = useState(false);
@@ -63,6 +63,12 @@ export function SensorCard({ type, value, unit, historicalData }: SensorCardProp
     switch (timeRange) {
       case 'live':
         filteredData = historicalData.slice(-20);
+        break;
+      case '1h':
+        filteredData = historicalData.filter(d => {
+          const date = new Date(d.timestamp);
+          return now.getTime() - date.getTime() <= 60 * 60 * 1000;
+        });
         break;
       case '24h':
         filteredData = historicalData.filter(d => {
@@ -94,12 +100,7 @@ export function SensorCard({ type, value, unit, historicalData }: SensorCardProp
   };
 
   const chartData = filterDataByRange();
-  const labels = chartData.map(d => {
-    const date = new Date(d.timestamp);
-    return timeRange === 'live' || timeRange === '24h' 
-      ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-      : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  });
+  const labels = chartData.map(d => d.timestamp);
   const values = chartData.map(d => d.value);
 
   return (
@@ -176,7 +177,7 @@ export function SensorCard({ type, value, unit, historicalData }: SensorCardProp
       {showChart && (
         <div className="p-6 rounded-2xl shadow-neumorphic bg-card animate-fade-in">
           <div className="flex gap-2 mb-4 flex-wrap">
-            {(['live', '24h', '7d', '15d', '30d'] as TimeRange[]).map(range => (
+            {(['live', '1h', '24h', '7d', '15d', '30d'] as TimeRange[]).map(range => (
               <Button
                 key={range}
                 variant={timeRange === range ? 'default' : 'outline'}

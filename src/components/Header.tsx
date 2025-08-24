@@ -7,9 +7,9 @@ import { cn } from '@/lib/utils';
 // Custom BEE Logo Component
 function BeeLogo({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 100 100"
-      className={cn("w-12 h-12", className)}
+    <img src="/favicon.png" alt="Bee Logo" className={cn("w-12 h-12 rounded-xl", className)} />
+  );
+}
       xmlns="http://www.w3.org/2000/svg"
     >
       {/* Honeycomb Pattern Background */}
