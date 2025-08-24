@@ -28,6 +28,7 @@ export function Dashboard() {
   // Transform historical data for charts
   const getHistoricalArray = (key: 'temperature' | 'humidity' | 'airpurity') => {
     return Object.entries(historicalData)
+      .filter(([_, data]) => data && data[key] != null)
       .map(([timestamp, data]) => ({
         timestamp,
         value: data[key]
@@ -46,21 +47,21 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <SensorCard
           type="temperature"
-          value={currentData.temperature}
+          value={currentData.temperature ?? 0}
           unit="°C"
           historicalData={getHistoricalArray('temperature')}
         />
         
         <SensorCard
           type="humidity"
-          value={currentData.humidity}
+          value={currentData.humidity ?? 0}
           unit="%"
           historicalData={getHistoricalArray('humidity')}
         />
         
         <SensorCard
           type="airpurity"
-          value={currentData.airpurity}
+          value={currentData.airpurity ?? 0}
           unit="%"
           historicalData={getHistoricalArray('airpurity')}
         />

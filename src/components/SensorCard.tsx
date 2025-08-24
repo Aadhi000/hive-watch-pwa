@@ -51,7 +51,7 @@ export function SensorCard({ type, value, unit, historicalData }: SensorCardProp
   const isAbnormal = value != null && (value < config.normalRange.min || 
     (config.normalRange.max < 100 && value > config.normalRange.max));
   
-  const trend = historicalData.length > 1 && historicalData[historicalData.length - 2]?.value != null
+  const trend = value != null && historicalData.length > 1 && historicalData[historicalData.length - 2]?.value != null
     ? value - historicalData[historicalData.length - 2].value 
     : 0;
 
